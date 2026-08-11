@@ -4,6 +4,7 @@ node_modules/
 # Environment Variables
 .env
 .env.*
+atlas-credentials.env
 
 # Build folders
 dist/
