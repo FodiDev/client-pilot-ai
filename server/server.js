@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
 import routes from './routes/index.js';
 import { notFound } from './middleware/notFoundMiddlware.js';
