@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import validator from 'validator';
 
 const userSchema = new mongoose.Schema(
   {
@@ -17,7 +18,10 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+      validate: {
+        validator: validator.isEmail,
+        message: 'Please provide a valid email address',
+      },
     },
 
     password: {
@@ -41,6 +45,11 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    lastLogin: {
+      type: Date,
+      default: null,
     },
   },
   {
@@ -68,7 +77,14 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const isMatch = await user.matchPassword(password);
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+
+  delete user.password;
+  delete user.__v;
+
+  return user;
+};
 
 const User = mongoose.model('User', userSchema);
 
