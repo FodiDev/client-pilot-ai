@@ -48,3 +48,44 @@ export const registerUser = asyncHandler(async (req, res) => {
   // Send JWT and response
   sendTokenResponse(user, 201, res, 'Account created successfully.');
 });
+
+/**
+ * @desc Login User
+ * @route POST /api/auth/login
+ * @access Public
+ */
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate request
+  if (!email || !password) {
+    res.status(400);
+    throw new Error('Please provide email and password.');
+  }
+
+  // Find user and include password
+  const user = await User.findOne({
+    email: email.toLowerCase(),
+  }).select('+password');
+
+  if (!user) {
+    res.status(401);
+    throw new Error('Invalid email or password.');
+  }
+
+  // Compare password
+  const isMatch = await user.matchPassword(password);
+
+  if (!isMatch) {
+    res.status(401);
+    throw new Error('Invalid email or password.');
+  }
+
+  // Update last login
+  user.lastLogin = new Date();
+
+  await user.save();
+
+  // Return token
+  sendTokenResponse(user, 200, res, 'Login successful.');
+});
