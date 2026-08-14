@@ -89,3 +89,47 @@ export const loginUser = asyncHandler(async (req, res) => {
   // Return token
   sendTokenResponse(user, 200, res, 'Login successful.');
 });
+
+/**
+ * @desc Get current logged-in user
+ * @route GET /api/auth/profile
+ * @access Private
+ */
+export const getProfile = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    user: req.user,
+  });
+});
+
+/**
+ * @desc Verify authentication
+ * @route GET /api/auth/verify
+ * @access Private
+ */
+export const verifyUser = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    authenticated: true,
+    user: req.user,
+  });
+});
+
+/**
+ * @desc Logout user
+ * @route POST /api/auth/logout
+ * @access Private
+ */
+export const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully.',
+  });
+});
