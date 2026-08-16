@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from './routes/ProtectedRoute';
-
 import DashboardLayout from './layouts/DashboardLayout';
 
 import Home from './pages/Home';
@@ -18,49 +17,19 @@ import Settings from './pages/dashboard/Settings';
 import NotFound from './pages/errors/NotFound';
 
 const App = () => {
-  /*
-   * Temporary authentication state.
-   *
-   * This will be replaced by AuthContext
-   * in Sprint 2.4.
-   */
-  const isAuthenticated = false;
-  const isLoading = false;
-
   return (
     <Routes>
-      {/* ========================= */}
       {/* Public Routes */}
-      {/* ========================= */}
 
       <Route path="/" element={<Home />} />
 
-      <Route
-        path="/login"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-        }
-      />
+      <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/register"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
-        }
-      />
+      <Route path="/register" element={<Register />} />
 
-      {/* ========================= */}
       {/* Protected Routes */}
-      {/* ========================= */}
 
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={isAuthenticated}
-            isLoading={isLoading}
-          />
-        }
-      >
+      <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
 
@@ -76,9 +45,7 @@ const App = () => {
         </Route>
       </Route>
 
-      {/* ========================= */}
       {/* 404 */}
-      {/* ========================= */}
 
       <Route path="/404" element={<NotFound />} />
 
