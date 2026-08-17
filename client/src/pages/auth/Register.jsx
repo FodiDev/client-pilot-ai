@@ -1,48 +1,49 @@
 import { React, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 
 import useAuth from '../../hooks/useAuth';
 import getErrorMessage from '../../utils/getErrorMessage';
+import { registerSchema } from '../../validation/authSchemas.js';
 
 const Register = () => {
   const navigate = useNavigate();
 
   const { register, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    setError('');
-    setLoading(true);
-
+  const onSubmit = async (data) => {
     try {
-      await register(formData);
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
 
       navigate('/dashboard', {
         replace: true,
       });
     } catch (error) {
-      setError(getErrorMessage(error));
-    } finally {
-      setLoading(false);
+      setError('root', {
+        type: 'server',
+        message: getErrorMessage(error),
+      });
     }
   };
 
@@ -61,13 +62,22 @@ const Register = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
+        {errors.root && (
+          <div
+            role="alert"
+            className="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+          >
+            {errors.root.message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="space-y-5"
+        >
+          {/* Name */}
+
           <div>
             <label htmlFor="name" className="mb-2 block text-sm font-medium">
               Full name
@@ -75,16 +85,25 @@ const Register = () => {
 
             <input
               id="name"
-              name="name"
               type="text"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="John Doe"
-              required
               autoComplete="name"
-              className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+              placeholder="John Doe"
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? 'name-error' : undefined}
+              className={`w-full rounded-lg border px-4 py-3 outline-none transition focus:ring-2 focus:ring-black ${
+                errors.name ? 'border-red-500' : 'border-gray-300'
+              }`}
+              {...register('name')}
             />
+
+            {errors.name && (
+              <p id="name-error" className="mt-2 text-sm text-red-600">
+                {errors.name.message}
+              </p>
+            )}
           </div>
+
+          {/* Email */}
 
           <div>
             <label htmlFor="email" className="mb-2 block text-sm font-medium">
@@ -93,16 +112,25 @@ const Register = () => {
 
             <input
               id="email"
-              name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
               autoComplete="email"
-              className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+              placeholder="you@example.com"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'email-error' : undefined}
+              className={`w-full rounded-lg border px-4 py-3 outline-none transition focus:ring-2 focus:ring-black ${
+                errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
+              {...register('email')}
             />
+
+            {errors.email && (
+              <p id="email-error" className="mt-2 text-sm text-red-600">
+                {errors.email.message}
+              </p>
+            )}
           </div>
+
+          {/* Password */}
 
           <div>
             <label
@@ -114,24 +142,76 @@ const Register = () => {
 
             <input
               id="password"
-              name="password"
               type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              minLength={8}
-              required
               autoComplete="new-password"
-              className="w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-black"
+              placeholder="••••••••"
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={
+                errors.password
+                  ? 'password-error password-help'
+                  : 'password-help'
+              }
+              className={`w-full rounded-lg border px-4 py-3 outline-none transition focus:ring-2 focus:ring-black ${
+                errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
+              {...register('password')}
             />
+
+            <p id="password-help" className="mt-2 text-xs text-gray-500">
+              At least 8 characters, including uppercase, lowercase, and a
+              number.
+            </p>
+
+            {errors.password && (
+              <p id="password-error" className="mt-2 text-sm text-red-600">
+                {errors.password.message}
+              </p>
+            )}
           </div>
+
+          {/* Confirm Password */}
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="mb-2 block text-sm font-medium"
+            >
+              Confirm password
+            </label>
+
+            <input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••"
+              aria-invalid={Boolean(errors.confirmPassword)}
+              aria-describedby={
+                errors.confirmPassword ? 'confirm-password-error' : undefined
+              }
+              className={`w-full rounded-lg border px-4 py-3 outline-none transition focus:ring-2 focus:ring-black ${
+                errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+              }`}
+              {...register('confirmPassword')}
+            />
+
+            {errors.confirmPassword && (
+              <p
+                id="confirm-password-error"
+                className="mt-2 text-sm text-red-600"
+              >
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Submit */}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Creating account...' : 'Create account'}
+            {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
